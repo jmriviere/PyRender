@@ -1,0 +1,66 @@
+<Renderer>:
+AnchorLayout:
+    anchor_x: 'right'
+    anchor_y: 'top'
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            Renderer:
+                mask_widget: mask
+                size_hint_x: None
+                width: root.width * .9
+            BoxLayout:    
+                orientation: 'vertical'
+                MaskDisplay:
+                    id: mask
+                    size_hint_x: None
+                    size_hint_y: None
+                    size: root.width *.1, root.width *.1
+                    on_pos: self.update_glsl()
+                    on_size: self.update_glsl()
+                Button:
+                    text: "3"
+                Button:
+                    text: "4"
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: root.height * .1
+            Label:
+                text: 'Threshold: ' + str(threshold.value) + ' '
+                size_hint_x: None
+            Slider:    
+                id: threshold    
+                min: 0.0
+                max: 1.0
+                step: 0.01
+                on_value: mask.update_glsl(self.value)
+#    rows: 2
+#     BoxLayout:
+#         size: 0,0
+#         orientation: 'horizontal'
+#         Label:
+#             color: 1,0,0,1
+#             text: 'derp'
+#         Widget:
+#             canvas:
+#                 Color:
+#                     rgba: 1,0,0,1
+#                 Rectangle:
+#                     pos: self.pos
+#                     size: self.size
+# #                width: 1920
+# #                height: 1080
+# #        Button:
+# #            text: 'derp2'    
+#     BoxLayout:
+#         orientation: 'vertical'    
+#         Slider:
+#             label: 'derp'
+#             min: '0'
+#             max: '1'
+#             step: .01
+
+
+
