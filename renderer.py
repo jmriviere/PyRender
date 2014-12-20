@@ -18,14 +18,13 @@ from kivy.core.window import Window
 Window.fullscreen = False
 
 class MaskDisplay(Widget):
-
+    
     def __init__(self, **kwargs):
         self.scene = ObjFile(resource_find('./models/square.obj'))
         super(MaskDisplay, self).__init__(**kwargs)
         with self.canvas:
             self.fbo = Fbo(size=self.size, compute_normal_mat=True, clear_color=(1., 1., 1., 1.))
             self.fbo.shader.source=resource_find('./utils/mask.glsl')
-            self.rect = Rectangle()
         with self.fbo:
             BindTexture(source='/home/poupine/code_rendering/textures/job_highres/specular.bmp', index=1)
             self.cb = Callback(self.setup_gl_context)
@@ -51,9 +50,8 @@ class MaskDisplay(Widget):
         proj = Matrix().view_clip(-50, 50, -50, 50, 1, 10000, 1)
         self.fbo['projection_mat'] = proj
         self.fbo['modelview_mat'] = Matrix().look_at(0,0,1,0,0,0,0,1,0)
-        self.canvas.remove(self.rect)
-        with self.canvas:
-            self.rect = Rectangle(pos=self.pos, size=self.size, texture=self.fbo.texture)
+#        self.rect.pos = self.pos
+#        self.rect.size = self.size
         
     def setup_scene(self):
         Color(1, 1, 1, 1)

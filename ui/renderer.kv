@@ -13,6 +13,11 @@ AnchorLayout:
             BoxLayout:    
                 orientation: 'vertical'
                 MaskDisplay:
+                    canvas:
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                            texture: self.fbo.texture
                     id: mask
                     size_hint_x: None
                     size_hint_y: None
