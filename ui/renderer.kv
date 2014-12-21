@@ -1,4 +1,6 @@
 <Renderer>:
+
+# Main layout
 AnchorLayout:
     anchor_x: 'right'
     anchor_y: 'top'
@@ -6,12 +8,19 @@ AnchorLayout:
         orientation: 'vertical'
         BoxLayout:
             orientation: 'horizontal'
+            # Rendering area
             Renderer:
                 threshold_widget: threshold
                 size_hint_x: None
                 width: root.width * .9
+                canvas:
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                        texture: self.fbo.texture
             BoxLayout:    
                 orientation: 'vertical'
+                # Mask area
                 MaskDisplay:
                     canvas:
                         Rectangle:
@@ -25,7 +34,8 @@ AnchorLayout:
                     on_pos: self.update_glsl()
                     on_size: self.update_glsl()
                 BoxLayout:
-                    orientation: 'horizontal'    
+                    orientation: 'horizontal'
+                    # Slider spec
                     BoxLayout:
                         orientation: 'vertical'
                         Slider:
@@ -38,6 +48,14 @@ AnchorLayout:
                         Label:
                             text: 'Rspec: ' + str(rspec.value) + ' '
                             size_hint_y: .1
+                        BoxLayout:
+                            size_hint_y: .1    
+                            orientation: 'horizontal'
+                            Label:
+                                text: 'Divide?'
+                            CheckBox:
+                                active: True
+                    # Slider diff
                     BoxLayout:
                         orientation: 'vertical'
                         Slider:
@@ -50,6 +68,14 @@ AnchorLayout:
                         Label:
                             text: 'Rdiff: ' + str(rdiff.value) + ' '
                             size_hint_y: .1
+                        BoxLayout:
+                            size_hint_y: .1    
+                            orientation: 'horizontal'
+                            Label:
+                                text: 'Divide?'
+                            CheckBox:
+                                active: True
+                # Slider intensity
                 BoxLayout:
                     orientation: 'vertical'
                     Slider:
@@ -62,8 +88,14 @@ AnchorLayout:
                     Label:
                         text: 'Lintensity: ' + str(lintensity.value) + ' '
                         size_hint_y: .1
-                    CheckBox:
-                        active: True    
+                    BoxLayout:
+                        size_hint_y: .1    
+                        orientation: 'horizontal'
+                        Label:
+                            text: 'Divide?'
+                        CheckBox:
+                            active: True
+        # Slider threshold
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: .1
@@ -77,6 +109,9 @@ AnchorLayout:
                 max: 1.0
                 step: 0.01
                 on_value: mask.update_glsl(self.value)
+            Button:
+                size_hint_x: .1
+                text: 'lol'    
 #    rows: 2
 #     BoxLayout:
 #         size: 0,0

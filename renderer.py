@@ -74,9 +74,9 @@ class Renderer(Widget):
     def __init__(self, **kwargs):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        self.canvas = RenderContext(compute_normal_mat=True)
+#        self.canvas = RenderContext(compute_normal_mat=True)
         # TODO - Pass the shader source as an argument to the constructor
-        self.canvas.shader.source = resource_find('./utils/simple.glsl')
+#        self.canvas.shader.source = resource_find('./utils/simple.glsl')
         # TODO - Pass the object file as an argument to the constructor
         self.scene = ObjFile(resource_find('./models/square.obj'))
         self.cam_pos = 100
@@ -84,19 +84,23 @@ class Renderer(Widget):
         self.light_mat = Matrix()
         super(Renderer, self).__init__(**kwargs)
         with self.canvas:
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/diffuse.bmp', index=1)
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/specular.bmp', index=2)
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/nmap.bmp', index=3)
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/roughness.bmp', index=4)
+            self.fbo = Fbo(size=(1920,1080), compute_normal_mat=True, clear_color=(1,0,0,0))
+            self.fbo.shader.source=resource_find('./utils/simple.glsl')
+            self.rect = Rectangle(texture=self.fbo.texture)
+        with self.fbo:
+            BindTexture(source='./textures/diffuse.bmp', index=1)
+            BindTexture(source='./textures/specular.bmp', index=2)
+            BindTexture(source='./textures/nmap.bmp', index=3)
+            BindTexture(source='./textures/roughness.bmp', index=4)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
             PopMatrix()
             self.cb = Callback(self.reset_gl_context)
-        self.canvas['diffuse'] = 1
-        self.canvas['specular'] = 2
-        self.canvas['nmap'] = 3
-        self.canvas['roughness'] = 4
+        self.fbo['diffuse'] = 1
+        self.fbo['specular'] = 2
+        self.fbo['nmap'] = 3
+        self.fbo['roughness'] = 4
         Clock.schedule_interval(self.update_glsl, 1 / 60.)
 
     def setup_gl_context(self, *args):
@@ -109,13 +113,19 @@ class Renderer(Widget):
         Color(1,1,1,1)
         asp = self.width / float(self.height)
         proj = Matrix().view_clip(-asp, asp, -1, 1, 1, 10000, 1)
-        self.canvas['projection_mat'] = proj
-        self.canvas['modelview_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0,0,0,0,1,0)
-        self.canvas['diffuse_light'] = (1.0, 1.0, 0.8)
-        self.canvas['ambient_light'] = (0.1, 0.1, 0.1)
-        self.canvas['light_mat'] = self.light_mat
-        self.canvas['threshold'] = self.threshold_widget.value
+        self.fbo['projection_mat'] = proj
+        self.fbo['modelview_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0,0,0,0,1,0)
+        self.fbo['diffuse_light'] = (1.0, 1.0, 0.8)
+        self.fbo['ambient_light'] = (0.1, 0.1, 0.1)
+        self.fbo['light_mat'] = self.light_mat
+        self.fbo['threshold'] = self.threshold_widget.value
+        with self.canvas:
+            self.canvas.remove(self.rect)
+            self.rect = Rectangle(texture=self.fbo.texture)
+        self.rect.pos = self.pos
+        self.rect.size = self.size
 #        self.canvas['lintensity']
+
 
     def setup_scene(self):
         Color(1, 1, 1, 1)
