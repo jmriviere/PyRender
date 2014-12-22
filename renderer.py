@@ -86,7 +86,6 @@ class Renderer(Widget):
         with self.canvas:
             self.fbo = Fbo(size=(1920,1080), compute_normal_mat=True, clear_color=(1,0,0,0))
             self.fbo.shader.source=resource_find('./utils/simple.glsl')
-            self.rect = Rectangle(texture=self.fbo.texture)
         with self.fbo:
             BindTexture(source='./textures/diffuse.bmp', index=1)
             BindTexture(source='./textures/specular.bmp', index=2)
@@ -119,11 +118,6 @@ class Renderer(Widget):
         self.fbo['ambient_light'] = (0.1, 0.1, 0.1)
         self.fbo['light_mat'] = self.light_mat
         self.fbo['threshold'] = self.threshold_widget.value
-        with self.canvas:
-            self.canvas.remove(self.rect)
-            self.rect = Rectangle(texture=self.fbo.texture)
-        self.rect.pos = self.pos
-        self.rect.size = self.size
 #        self.canvas['lintensity']
 
 
