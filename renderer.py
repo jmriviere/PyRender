@@ -14,6 +14,7 @@ from objloader import ObjFile
 from kivy.interactive import InteractiveLauncher
 from kivy.core.image import Image
 from kivy.properties import ObjectProperty
+from kivy.properties import StringProperty
 from kivy.core.window import Window
 Window.fullscreen = False
 
@@ -26,7 +27,7 @@ class MaskDisplay(Widget):
             self.fbo = Fbo(size=self.size, compute_normal_mat=True, clear_color=(1., 1., 1., 1.))
             self.fbo.shader.source=resource_find('./utils/mask.glsl')
         with self.fbo:
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/specular.bmp', index=1)
+            BindTexture(source='./textures/specular.bmp', index=1)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
@@ -70,6 +71,7 @@ class MaskDisplay(Widget):
 class Renderer(Widget):
 
     threshold_widget = ObjectProperty()
+    tex_path = StringProperty()
     
     def __init__(self, **kwargs):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
