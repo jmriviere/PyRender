@@ -14,10 +14,13 @@ from objloader import ObjFile
 from kivy.interactive import InteractiveLauncher
 from kivy.core.image import Image
 from kivy.properties import ObjectProperty
+from kivy.properties import StringProperty
 from kivy.core.window import Window
 Window.fullscreen = False
 
 class MaskDisplay(Widget):
+
+    tex_path = StringProperty()
     
     def __init__(self, **kwargs):
         self.scene = ObjFile(resource_find('./models/square.obj'))
@@ -26,7 +29,7 @@ class MaskDisplay(Widget):
             self.fbo = Fbo(size=self.size, compute_normal_mat=True, clear_color=(1., 1., 1., 1.))
             self.fbo.shader.source=resource_find('./utils/mask.glsl')
         with self.fbo:
-            BindTexture(source='/home/poupine/code_rendering/textures/job_highres/specular.bmp', index=1)
+            BindTexture(source=self.tex_path + '/job_highres/specular.bmp', index=1)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
@@ -66,10 +69,10 @@ class MaskDisplay(Widget):
         )
         PopMatrix()
 
-
 class Renderer(Widget):
 
     threshold_widget = ObjectProperty()
+    tex_path = StringProperty()
     
     def __init__(self, **kwargs):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -87,10 +90,10 @@ class Renderer(Widget):
             self.fbo = Fbo(size=(1920,1080), compute_normal_mat=True, clear_color=(1,0,0,0))
             self.fbo.shader.source=resource_find('./utils/simple.glsl')
         with self.fbo:
-            BindTexture(source='./textures/diffuse.bmp', index=1)
-            BindTexture(source='./textures/specular.bmp', index=2)
-            BindTexture(source='./textures/nmap.bmp', index=3)
-            BindTexture(source='./textures/roughness.bmp', index=4)
+            BindTexture(source=self.tex_path + '/diffuse.bmp', index=1)
+            BindTexture(source=self.tex_path + '/specular.bmp', index=2)
+            BindTexture(source=self.tex_path + '/nmap.bmp', index=3)
+            BindTexture(source=self.tex_path + '/roughness.bmp', index=4)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
@@ -100,6 +103,8 @@ class Renderer(Widget):
         self.fbo['specular'] = 2
         self.fbo['nmap'] = 3
         self.fbo['roughness'] = 4
+        print 'selftexpath', self.tex_path
+        print kwargs
         Clock.schedule_interval(self.update_glsl, 1 / 60.)
 
     def setup_gl_context(self, *args):

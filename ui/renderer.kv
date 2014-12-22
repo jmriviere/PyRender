@@ -1,4 +1,6 @@
 <Renderer>:
+<RendererApp>:
+    id: app    
 
 # Main layout
 AnchorLayout:
@@ -10,6 +12,8 @@ AnchorLayout:
             orientation: 'horizontal'
             # Rendering area
             Renderer:
+                tex_path: app.tex_path
+                id: renderer
                 threshold_widget: threshold
                 size_hint_x: None
                 width: root.width * .9
