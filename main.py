@@ -11,17 +11,13 @@ class RendererApp(App):
 
     tex_path = StringProperty()
 
-    def __init__(self, **kwargs):
-        super(RendererApp, self).__init__(**kwargs)
-        self.tex_path = 'derp'
+    def __init__(self,tex_path):
+        super(RendererApp, self).__init__()
+        self.tex_path = tex_path
     
     def build(self):
         mainWindow = Builder.load_file('ui/renderer.kv')
         return mainWindow
-
-    def set_tex_path(self):
-        print 'derpiderp', self.tex_path
-        return self.tex_path
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:

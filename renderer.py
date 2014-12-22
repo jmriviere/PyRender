@@ -29,7 +29,6 @@ class MaskDisplay(Widget):
             self.fbo = Fbo(size=self.size, compute_normal_mat=True, clear_color=(1., 1., 1., 1.))
             self.fbo.shader.source=resource_find('./utils/mask.glsl')
         with self.fbo:
-            BindTexture(source=self.tex_path + '/job_highres/specular.bmp', index=1)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
@@ -37,6 +36,11 @@ class MaskDisplay(Widget):
             self.cb = Callback(self.reset_gl_context)
         self.fbo['tex1'] = 1
 
+    def on_tex_path(self, *args):
+        with self.fbo:
+            BindTexture(source=self.tex_path + '/specular.bmp', index=1)
+        
+        
     def setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
         
@@ -53,8 +57,6 @@ class MaskDisplay(Widget):
         proj = Matrix().view_clip(-50, 50, -50, 50, 1, 10000, 1)
         self.fbo['projection_mat'] = proj
         self.fbo['modelview_mat'] = Matrix().look_at(0,0,1,0,0,0,0,1,0)
-#        self.rect.pos = self.pos
-#        self.rect.size = self.size
         
     def setup_scene(self):
         Color(1, 1, 1, 1)
@@ -90,10 +92,6 @@ class Renderer(Widget):
             self.fbo = Fbo(size=(1920,1080), compute_normal_mat=True, clear_color=(1,0,0,0))
             self.fbo.shader.source=resource_find('./utils/simple.glsl')
         with self.fbo:
-            BindTexture(source=self.tex_path + '/diffuse.bmp', index=1)
-            BindTexture(source=self.tex_path + '/specular.bmp', index=2)
-            BindTexture(source=self.tex_path + '/nmap.bmp', index=3)
-            BindTexture(source=self.tex_path + '/roughness.bmp', index=4)
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
@@ -103,10 +101,16 @@ class Renderer(Widget):
         self.fbo['specular'] = 2
         self.fbo['nmap'] = 3
         self.fbo['roughness'] = 4
-        print 'selftexpath', self.tex_path
         print kwargs
         Clock.schedule_interval(self.update_glsl, 1 / 60.)
 
+    def on_tex_path(self, *args):
+        with self.fbo:
+            BindTexture(source=self.tex_path + '/diffuse.bmp', index=1)
+            BindTexture(source=self.tex_path + '/specular.bmp', index=2)
+            BindTexture(source=self.tex_path + '/nmap.bmp', index=3)
+            BindTexture(source=self.tex_path + '/roughness.bmp', index=4)
+        
     def setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
         self.fbo.clear_buffer()
