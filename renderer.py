@@ -104,10 +104,11 @@ class Renderer(Widget):
 
     def setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
+        self.fbo.clear_buffer()
 
     def reset_gl_context(self, *args):
-        glDisable(GL_DEPTH_TEST)
-
+        glDisable(GL_DEPTH_TEST)            
+        
     def update_glsl(self, *largs):
         Color(1,1,1,1)
         asp = self.width / float(self.height)
