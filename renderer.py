@@ -132,7 +132,7 @@ class Renderer(Widget):
         asp = self.width / float(self.height)
         proj = Matrix().view_clip(-asp, asp, -1., 1., 1., 10000., 1.)
         self.fbo['projection_mat'] = proj
-        self.fbo['view_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0.,10.,0.,0.,1.,0.)
+        self.fbo['view_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0.,0.,0.,0.,1.,0.)
         self.fbo['light_pos'] = tuple(self.light_pos)
         self.fbo['threshold'] = self.threshold_widget.value
         self.fbo['normal_mat'] = (self.fbo['model_mat'].multiply(self.fbo['view_mat'])).normal_matrix()
