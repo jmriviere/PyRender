@@ -18,23 +18,14 @@ uniform mat4 projection_mat;
 uniform mat4 light_mat;
 uniform vec4 light_pos;
 
-varying vec4 normal_vec;
+varying vec3 normal_vec;
 varying vec4 vertex_pos;
 varying vec4 lightPos;
-
-//void main (void) {
-//    //compute vertex position in eye_sapce and normalize normal vector
-//    vec4 pos = modelview_mat * vec4(v_pos,1.0);
-//    vertex_pos = pos;
-//    lightPos = modelview_mat*light_pos;
-//    normal_vec = vec4(v_normal,0.0);
-//    texCoord = v_tc0;
-//    gl_Position = projection_mat * pos;
-//}
 
 uniform vec4 lpos;
 uniform vec3 axis;
 uniform int angle;
+
 varying vec3 lightVec;
 varying vec3 eyeVec;
 varying vec3 diffLight;
@@ -69,11 +60,10 @@ mat3 rodrigue(int angle, vec3 axis) {
 void main() {
 
      //compute vertex position in eye_space and normalize normal vector
-     vec4 pos = modelview_mat * vec4(v_pos,1.0);
+    vec4 pos = modelview_mat * vec4(v_pos,1.0);
      vertex_pos = pos;
-     lightPos = modelview_mat*vec4(light_mat[3]);//light_pos;
-//     lightPos = light_pos;
-//     normal_vec = vec4(v_normal,0.0);
+     lightPos = modelview_mat * vec4(light_mat[3].xyz,1.0);
+     normal_vec = normalize(gl_NormalMatrix * v_normal);
      texCoord = v_tc0;
 
      vec3 n = normalize(gl_NormalMatrix * v_normal);
@@ -86,13 +76,11 @@ void main() {
 
      mat3 rotmat = mat3(t, b, n);
 
-     lightVec = rotmat * normalize(tmpVec);
+     lightVec = normalize(tmpVec);
 
      tmpVec = vec3(-pos.xyz);
 
-     eyeVec = rotmat * normalize(tmpVec);
-
-     diffLight = vec3(.0, .0, 1.);//vec3(gl_ModelViewMatrix * vec4(.0, .0, 1., 1.));
+     eyeVec =  rotmat * normalize(tmpVec);
 
      gl_Position = projection_mat * pos;
 }
@@ -103,38 +91,21 @@ void main() {
     precision highp float;
 #endif
 
-// varying vec4 normal_vec;
-// varying vec4 vertex_pos;
-// varying vec4 lightPos;
-
-// uniform mat4 normal_mat;
-// uniform sampler2D diffuse;
-// varying vec2 texCoord;
-
-// void main (void){
-//     //correct normal, and compute light vector (assume light at the eye)
-// //    vec4 v_normal = normalize( normal_mat * normal_vec ) ;
-//     //reflectance based on lamberts law of cosine
-// //    float theta = clamp(dot(v_normal,normalize(lightPos-vertex_pos)), 0.0, 1.0);
-//     gl_FragColor = vec4(texture2D(diffuse,texCoord));
-// }
-
 varying vec3 lightVec;
 varying vec3 eyeVec;
 varying vec3 diffLight;
 varying vec2 texCoord;
 varying float distSqr;
+varying vec3 normal_vec;
+
 uniform sampler2D nmap;
 uniform sampler2D diffuse;
 uniform sampler2D specular;
 uniform sampler2D roughness;
-//uniform sampler2D ni;
-//uniform float rLetters;
-//uniform float rBase;
-//uniform float sLetters;
-//uniform float sBase;
-
-const float PI = 3.14159265358979323846;
+uniform float lintensity;
+uniform float rdiff;
+uniform float rspec;
+uniform float threshold;
 
 
 float chi(float val) {
@@ -147,7 +118,7 @@ float chi(float val) {
 }
 
 float G(float alpha, vec3 normal, vec3 light, vec3 view, vec3 h) {
-      float alpha2 = alpha;//alpha * alpha;
+      float alpha2 = alpha * alpha;
       float costhetah = max(dot(view,h), 0.0);
       float costhetav = max(dot(view,normal), 0.0);
       float thetav = acos(costhetav);
@@ -201,7 +172,7 @@ vec4 LightingFuncGGX_REF(vec3 N, vec3 V, vec3 L, float roughness, vec3 F0)
 	float dotNH = clamp(dot(N,H), 0.0, 1.0);
 	float dotLH = clamp(dot(L,H), 0.0, 1.0);
 
-	float D, vis;
+        float D, vis;
 	vec3 F;
 
 	// D
@@ -248,7 +219,7 @@ void main() {
 //     float distSqr = dot(lightVec, lightVec);
        float x =-45./90.;
        float y = 0./90.;
-     vec3 lVec = normalize(lightVec);//normalize(vec3(x, y, sqrt(1.0-(x*x + y*y))));//normalize(vec3(cos(-PI/2.0 - 0.0873), 0.0, -sin(-PI/2.0-0.0873)));//normalize(lightVec); //* inversesqrt(distSqr);
+       vec3 lVec = normalize(lightVec);//normalize(vec3(x, y, sqrt(1.0-(x*x + y*y))));//normalize(vec3(cos(-PI/2.0 - 0.0873), 0.0, -sin(-PI/2.0-0.0873)));//normalize(lightVec); //* inversesqrt(distSqr);
 
 //     vec3 vVec = normalize(lVec);//vec3(0.0, 0.0, 1.0);//lVec;//normalize(eyeVec);//vec3(0.0, 0.0, 1.0);//lVec;//vec3(0.0, 0.0, 1.0);//normalize(eyeVec);
 //vec3 vVec = lVec;
@@ -263,55 +234,30 @@ vec3 vVec = normalize(vec3(x, y, sqrt(1.0-(x*x+y*y))));
 //       vec4 diff = vec4(0.1, 0.0, 0.0, 1.0);
      vec4 spec = pow(texture2D(specular, texCoord), vec4(2.2));//15.;
 
-     float alpha = pow(texture2D(roughness, texCoord).r, 1.0);//*1.2;//1.1;//*9./16.0;//80.;//*2.; //* 2.5; //* 8.0;//*8.0 /4.0;//*8.0/6.0;//* 8.0/6.0;//*8.0; // 20.0;//16.0;//2.0;//2.0;
-
-//vec4 spec = vec4(alpha,alpha,alpha,1);
-
-//     if (diff.xyz == vec3(0.))
-//     	spec = vec4(vec3(0.), 1.0);
-
-//     float Fr = (texture2D(ni, texCoord).x + texture2D(ni, texCoord).y + texture2D(ni, texCoord).z)/3.0;
+     float alpha = pow(texture2D(roughness, texCoord).r, 1.0);
 
      float eta = (1.0+sqrt(.9))/(1.0-sqrt(.9));
 
-     // if (spec.x < 0.12 && spec.y < 0.12 && spec.z < 0.12) {
-     //  	eta = 3.4221;
-     // }
-     // else {
-     //  	  eta = 20.1727;
-     // }
-
-     //float R = pow((1.0-eta)/(1.0+eta), 2.0);
-//      if (spec.x < .1) {
-//      	alpha = alpha * rBase;
-//      	spec = spec*sBase;
-//     }
-//      else {
-//      	  alpha = alpha *rLetters;
-// //	  diff = vec4(0.0);
-//      	  //diff = vec4(0.0, 0.0, 1.0, 1.0);
-//      	  spec = spec*sLetters;
-//      }
-
-//     spec = vec4(spec.b, spec.b, spec.b, 1.0);
      vec4 R = spec;
      vec4 fresnel = R + (vec4(1.0)-R) * vec4(pow(1.0 - dot(h,vVec), 5.0));
      nn.x = -nn.x;
      nn.y = -nn.y;
      normal.x = -normal.x;
      normal.y = -normal.y;
-     spec = spec * 21.0;
 
-     float att = 1.0;//((1.0 + 0.22 * distSqr) * (1.0 + 0.2 * distSqr * distSqr));
-//     nn = vec3(0., 0., 1.);
-//    normal = nn;
-//     normal.x = -normal.x;
-//     normal.y = -normal.y;
-//     nn == normal;
-//       normal = nn;
-//nn=normal;
-//normal = nn;
-     gl_FragColor = pow((diff * max(dot(nn, lVec),0.0) + vec4(vec3(spec.xyz),1.0) * vec4(vec3(D(alpha, normal, h)), 1.0) * vec4(vec3(G(alpha, normal, lVec, vVec, h)), 1.0) * fresnel/vec4(4.0 * abs(dot(vVec, normal)) * vec4(abs(dot(lVec, normal))))), vec4(1.0/2.2));
+     if (spec.y <= threshold) {
+         alpha = alpha * rdiff;
+     }
+     else {
+     	  alpha = alpha *rspec;
+          spec = spec*lintensity;
+     }
+
+     vec3 Diffuse = diff.xyz * max(dot(normal_vec, lVec),0.0);
+//     vec3 Specular = (spec.xyz * D(alpha, normal, h) * G(alpha, normal, lVec, vVec, h) * fresnel.xyz)/(4.0 * max(dot(vVec, normal), .01) * max(dot(lVec, normal), .01));
+     //     gl_FragColor = pow((diff * max(dot(nn, lVec),0.0) + vec4(vec3(spec.xyz),1.0) * vec4(vec3(D(alpha, normal, h)), 1.0) * vec4(vec3(G(alpha, normal, lVec, vVec, h)), 1.0) * fresnel/vec4(4.0 * abs(dot(vVec, normal)) * vec4(abs(dot(lVec, normal))))), vec4(1.0/2.2));
+     vec3 color = Diffuse; //+ Specular;
+     gl_FragColor = pow(vec4(color,1.0), vec4(1.0/2.2));
 //gl_FragColor = pow(spec, vec4(1.0/2.2));
 //gl_FragColor = pow(spec, vec4(1.0/2.2));
 }

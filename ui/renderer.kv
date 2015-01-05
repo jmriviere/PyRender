@@ -16,7 +16,7 @@ AnchorLayout:
                 id: renderer
                 threshold_widget: threshold
                 size_hint_x: None
-                width: root.width * .9
+                width: root.width * .88
                 canvas:
                     Rectangle:
                         pos: self.pos
@@ -46,50 +46,54 @@ AnchorLayout:
                         Slider:
                             orientation: 'vertical'    
                             id: rspec    
-                            min: 0.0
+                            min: 1.0
                             max: 500
                             step: 0.1
-#                            on_value: mask.update_glsl(self.value)
+                            on_value: renderer.update(rspecC.active, 'rspec', rspec.value)
                         Label:
-                            text: 'Rspec: ' + str(rspec.value) + ' '
+                            text: 'Rspec: \n' + str(rspec.value) + ' '
                             size_hint_y: .1
                         BoxLayout:
                             size_hint_y: .1    
                             orientation: 'horizontal'
                             Label:
-                                text: 'Divide?'
+                                text: 'Div?'
                             CheckBox:
+                                id: rspecC
                                 active: True
+                                on_active: renderer.update(self.active, 'rspec', rspec.value)
                     # Slider diff
                     BoxLayout:
                         orientation: 'vertical'
                         Slider:
                             orientation: 'vertical'    
                             id: rdiff    
-                            min: 0.0
+                            min: 1.0
                             max: 500
                             step: 0.1
-#                            on_value: mask.update_glsl(self.value)
+                            on_value: renderer.update(rdiffC.active, 'rdiff', rdiff.value)
                         Label:
-                            text: 'Rdiff: ' + str(rdiff.value) + ' '
+                            text: 'Rdiff: \n' + str(rdiff.value) + ' '
                             size_hint_y: .1
                         BoxLayout:
                             size_hint_y: .1    
                             orientation: 'horizontal'
                             Label:
-                                text: 'Divide?'
+                                text: 'Div?'
                             CheckBox:
+                                id: rdiffC    
                                 active: True
+                                on_active: renderer.update(self.active, 'rdiff', rdiff.value)
                 # Slider intensity
                 BoxLayout:
                     orientation: 'vertical'
                     Slider:
                         orientation: 'vertical'    
                         id: lintensity    
-                        min: 0.0
-                        max: 500
+                        min: 1.0
+                        max: 200.0
                         step: 0.1
-#                        on_value: mask.update_glsl(self.value)
+                        on_value: renderer.update(lintensityC.active, 'lintensity', lintensity.value)
                     Label:
                         text: 'Lintensity: ' + str(lintensity.value) + ' '
                         size_hint_y: .1
@@ -99,7 +103,9 @@ AnchorLayout:
                         Label:
                             text: 'Divide?'
                         CheckBox:
+                            id: lintensityC    
                             active: True
+                            on_active: renderer.update(self.active, 'lintensity', lintensity.value)
         # Slider threshold
         BoxLayout:
             orientation: 'horizontal'
@@ -116,7 +122,8 @@ AnchorLayout:
                 on_value: mask.update_glsl(self.value)
             Button:
                 size_hint_x: .1
-                text: 'lol'    
+                text: 'save'
+                on_press: app.save()
 #    rows: 2
 #     BoxLayout:
 #         size: 0,0

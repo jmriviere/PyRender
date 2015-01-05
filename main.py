@@ -19,6 +19,9 @@ class RendererApp(App):
         mainWindow = Builder.load_file('ui/renderer.kv')
         return mainWindow
 
+    def save(self):
+        pass
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print 'Please provide the path to your textures'

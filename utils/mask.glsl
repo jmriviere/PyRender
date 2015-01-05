@@ -30,9 +30,9 @@ uniform float threshold;
 varying vec2 texCoord;
 
 void main(void) {
-    float specG = texture2D(tex1, texCoord).y;
+    float specG = pow(texture2D(tex1, texCoord).y,2.2);
     float color = 0.0;
-    if (specG >= threshold) {
+    if (specG > threshold) {
         color = 1.0;
     }
     gl_FragColor = vec4(color, color, color, 1.0);

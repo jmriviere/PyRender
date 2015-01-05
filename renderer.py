@@ -15,6 +15,9 @@ from kivy.interactive import InteractiveLauncher
 from kivy.core.image import Image
 from kivy.properties import ObjectProperty
 from kivy.properties import StringProperty
+from kivy.core.image import ImageData
+from kivy.core.image import Image
+from kivy.graphics.texture import Texture
 from kivy.core.window import Window
 Window.fullscreen = False
 
@@ -26,7 +29,7 @@ class MaskDisplay(Widget):
         self.scene = ObjFile(resource_find('./models/square.obj'))
         super(MaskDisplay, self).__init__(**kwargs)
         with self.canvas:
-            self.fbo = Fbo(size=self.size, compute_normal_mat=True, clear_color=(1., 1., 1., 1.))
+            self.fbo = Fbo(size=self.size, clear_color=(1., 1., 1., 1.))
             self.fbo.shader.source=resource_find('./utils/mask.glsl')
         with self.fbo:
             self.cb = Callback(self.setup_gl_context)
@@ -60,7 +63,7 @@ class MaskDisplay(Widget):
         
     def setup_scene(self):
         Color(1, 1, 1, 1)
-        PushMatrix()
+        PushMatrix()        
         m = list(self.scene.objects.values())[0]
         UpdateNormalMatrix()
         self.mesh = Mesh(
@@ -86,30 +89,36 @@ class Renderer(Widget):
         self.scene = ObjFile(resource_find('./models/square.obj'))
         self.cam_pos = 100
         self.cam_rot = 0
-        self.light_mat = Matrix()
+        self.light_pos = [0.,0.,1.,1.]
         super(Renderer, self).__init__(**kwargs)
         with self.canvas:
-            self.fbo = Fbo(size=(1920,1080), compute_normal_mat=True, clear_color=(1,0,0,0))
-            self.fbo.shader.source=resource_find('./utils/simple.glsl')
+            self.fbo = Fbo(size=(1920,1080), clear_color=(1,0,0,0))
+            self.fbo.shader.source=resource_find('./utils/ggx.glsl')
+        self.fbo['rdiff'] = self.fbo['rspec'] = self.fbo['lintensity'] = 1.0
         with self.fbo:
             self.cb = Callback(self.setup_gl_context)
             PushMatrix()
             self.setup_scene()
             PopMatrix()
             self.cb = Callback(self.reset_gl_context)
-        self.fbo['diffuse'] = 1
-        self.fbo['specular'] = 2
-        self.fbo['nmap'] = 3
-        self.fbo['roughness'] = 4
-        print kwargs
+        self.fbo['diffuse'] = 2
+        self.fbo['specular'] = 3
+        self.fbo['nmap'] = 4
+        self.fbo['roughness'] = 5
+        self.fbo['model_mat'] = Matrix()
+        self.fbo['test_mat'] = Matrix().look_at(0,0,100,0,0,0,0,1,0)
         Clock.schedule_interval(self.update_glsl, 1 / 60.)
 
     def on_tex_path(self, *args):
         with self.fbo:
-            BindTexture(source=self.tex_path + '/diffuse.bmp', index=1)
-            BindTexture(source=self.tex_path + '/specular.bmp', index=2)
-            BindTexture(source=self.tex_path + '/nmap.bmp', index=3)
-            BindTexture(source=self.tex_path + '/roughness.bmp', index=4)
+            diffuse = Image(self.tex_path + '/diffuse.bmp')
+            specular = Image(self.tex_path + '/specular.bmp')
+            nmap = Image(self.tex_path + '/nmap.bmp')
+            roughness = Image(self.tex_path + '/roughness.bmp')
+            BindTexture(texture=diffuse.texture, index=2)
+            BindTexture(texture=specular.texture, index=3)
+            BindTexture(texture=nmap.texture, index=4)
+            BindTexture(texture=roughness.texture, index=5)
         
     def setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
@@ -121,29 +130,23 @@ class Renderer(Widget):
     def update_glsl(self, *largs):
         Color(1,1,1,1)
         asp = self.width / float(self.height)
-        proj = Matrix().view_clip(-asp, asp, -1, 1, 1, 10000, 1)
+        proj = Matrix().view_clip(-asp, asp, -1., 1., 1., 10000., 1.)
         self.fbo['projection_mat'] = proj
-        self.fbo['modelview_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0,0,0,0,1,0)
-        self.fbo['diffuse_light'] = (1.0, 1.0, 0.8)
-        self.fbo['ambient_light'] = (0.1, 0.1, 0.1)
-        self.fbo['light_mat'] = self.light_mat
+        self.fbo['view_mat'] = Matrix().look_at(self.cam_pos*math.sin(self.cam_rot),0,self.cam_pos*math.cos(self.cam_rot),0.,10.,0.,0.,1.,0.)
+        self.fbo['light_pos'] = tuple(self.light_pos)
         self.fbo['threshold'] = self.threshold_widget.value
-#        self.canvas['lintensity']
-
+        self.fbo['normal_mat'] = (self.fbo['model_mat'].multiply(self.fbo['view_mat'])).normal_matrix()
 
     def setup_scene(self):
         Color(1, 1, 1, 1)
-        self.light_mat.translate(0,0,100)
-        PushMatrix()
+        width, height = self.fbo.texture.size
         m = list(self.scene.objects.values())[0]
-        UpdateNormalMatrix()
         self.mesh = Mesh(
             vertices=m.vertices,
             indices=m.indices,
             fmt=m.vertex_format,
             mode='triangles',
         )
-        PopMatrix()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -152,29 +155,38 @@ class Renderer(Widget):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'up':
             if modifiers and modifiers[0] == 'ctrl':
-               self.light_mat.translate(0,0,10)
+                self.light_pos[2] += 10
             else:
                 if (self.cam_pos > 10):
                     self.cam_pos -= 10
         elif keycode[1] == 'down':
             if modifiers and modifiers[0] == 'ctrl':
-                self.light_mat.translate(0,0,-10)
+                self.light_pos[2] -= 10
             else:
                 self.cam_pos += 10
         elif keycode[1] == 'left':
-            self.cam_rot += math.pi/180
-        elif keycode[1] == 'right':
             self.cam_rot -= math.pi/180
+        elif keycode[1] == 'right':
+            self.cam_rot += math.pi/180
         elif keycode[1] == 'w':
-            self.light_mat.translate(0,10,0)
+            self.light_pos[1] += 10
         elif keycode[1] == 's':
-            self.light_mat.translate(0,-10,0)
+            self.light_pos[1] -= 10
         elif keycode[1] == 'a':
-            self.light_mat.translate(-10,0,0)
+            self.light_pos[0] -= 10
         elif keycode[1] == 'd':
-            self.light_mat.translate(10,0,0)
-            
-        
+            self.light_pos[0] += 10
         if keycode[1] == 'escape':
             keyboard.release()
         return True        
+
+    def update(self, active, label, value):
+        if label == 'rdiff':
+            self.fbo['rdiff'] = 1/float(value) if active else value
+        elif label == 'rspec':
+            self.fbo['rspec'] = 1/float(value) if active else value
+        elif label == 'lintensity':
+            self.fbo['lintensity'] = 1/float(value) if active else value
+        else:
+            return
+        self.update_glsl()
