@@ -18,9 +18,22 @@ AnchorLayout:
                 size_hint_x: None
                 width: root.width * .88
                 canvas:
+                    Color:
+                        rgb: 1,1,1
                     Rectangle:
                         pos: self.pos
                         size: self.size
+                    Color:
+                        rgb: 0,0,0    
+                    Rectangle:
+                        pos: (list(self.pos)[0] +10, list(self.pos)[1] + 10)
+                        size: (1280, 720)#self.size
+                        #                        texture: self.fbo.texture
+                    Color:
+                        rgb: 1,1,1
+                    Rectangle:
+                        pos: (list(self.pos)[0] + 10  + (1280-1900*720/2000)/2, list(self.pos)[1]+10 + (720 - 720)/2)
+                        size: (1900*720/2000, 720)#(2000*720/1900, 720)
                         texture: self.fbo.texture
             BoxLayout:    
                 orientation: 'vertical'
@@ -47,8 +60,8 @@ AnchorLayout:
                             orientation: 'vertical'    
                             id: rspec    
                             min: 1.0
-                            max: 500
-                            step: 0.1
+                            max: 100.
+                            step: 0.01
                             on_value: renderer.update(rspecC.active, 'rspec', rspec.value)
                         Label:
                             text: 'Rspec: \n' + str(rspec.value) + ' '
@@ -69,7 +82,7 @@ AnchorLayout:
                             orientation: 'vertical'    
                             id: rdiff    
                             min: 1.0
-                            max: 500
+                            max: 100.
                             step: 0.1
                             on_value: renderer.update(rdiffC.active, 'rdiff', rdiff.value)
                         Label:
@@ -91,8 +104,8 @@ AnchorLayout:
                         orientation: 'vertical'    
                         id: lintensity    
                         min: 1.0
-                        max: 200.0
-                        step: 0.1
+                        max: 100.
+                        step: 0.01
                         on_value: renderer.update(lintensityC.active, 'lintensity', lintensity.value)
                     Label:
                         text: 'Lintensity: ' + str(lintensity.value) + ' '
